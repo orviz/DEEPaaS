@@ -87,8 +87,12 @@ class BaseModel(object):
         This method will perform a prediction based on the data stored in the
         URL passed as argument.
 
-        :param str url: URL pointing to the data to be analized
+        :param str url: URL pointing to the data to be analyzed
         """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def predict_stream(self, *args):
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -121,6 +125,9 @@ class TestModel(BaseModel):
 
     def predict_url(self, url, **kwargs):
         return super(TestModel, self).predict_url(url, **kwargs)
+
+    def predict_stream(self, *args):
+        return super(TestModel, self).predict_stream(*args)
 
     def train(self, *args):
         return super(TestModel, self).train(*args)
@@ -192,6 +199,10 @@ class ModelWrapper(object):
     @catch_error
     def predict_url(self, *args):
         return self._get_method("predict_url")(*args)
+
+    @catch_error
+    def predict_stream(self, *args):
+        return self._get_method("predict_stream")(*args)
 
     @catch_error
     def train(self, *args):

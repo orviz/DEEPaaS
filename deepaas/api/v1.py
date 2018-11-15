@@ -51,6 +51,12 @@ data_parser.add_argument('url',
                          required=False,
                          action="append")
 
+data_parser.add_argument('stream',
+                         help="HOST:PORT to retrieve data to perform inference.",
+                         type=str,
+                         dest='stream',
+                         required=False)
+
 model_links = api.model('Location', {
     "rel": fields.String(required=True),
     "href": fields.Url(required=True)
@@ -169,10 +175,10 @@ class ModelPredict(flask_restplus.Resource):
 
         args = data_parser.parse_args()
 
-        if (not any([args["urls"], args["files"]]) or
-                all([args["urls"], args["files"]])):
-            raise exceptions.BadRequest("You must provide either 'url' or "
-                                        "'data' in the payload")
+        if (not any([args["urls"], args["files"], args["stream"]]) or
+                all([args["urls"], args["files"], args["stream"]])):
+            raise exceptions.BadRequest("You must provide either 'url', 'data' or "
+                                        "'stream' in the payload")
 
         if args["files"]:
             # FIXME(aloga): only handling one file, see comment on top of file
@@ -183,6 +189,8 @@ class ModelPredict(flask_restplus.Resource):
             ret = obj.predict_data(data)
         elif args["urls"]:
             ret = obj.predict_url(args["urls"])
+        elif args["stream"]:
+            ret = obj.predict_stream(args["stream"])
         return ret
 
 

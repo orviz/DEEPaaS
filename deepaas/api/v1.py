@@ -52,7 +52,7 @@ data_parser.add_argument('url',
                          action="append")
 
 data_parser.add_argument('stream',
-                         help="HOST:PORT to retrieve data to perform inference.",
+                         help="JSON parameters; e.g., { \"in\": { \"host\": \"127.0.0.1\", \"port\": 9999, \"encoding\": \"utf-8\", \"columns\": [16, 9]}, \"out\": { \"host\": \"127.0.0.1\", \"port\": 9998, \"encoding\": \"utf-8\"}}",
                          type=str,
                          dest='stream',
                          required=False)

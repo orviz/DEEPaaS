@@ -163,16 +163,21 @@ def _get_handler(model_name, model_obj):  # noqa
         async def delete(self, request, wsk_args=None):
             uuid_ = request.match_info["uuid"]
             training = self._trainings.pop(uuid_, None)
-            if not training:
-                raise web.HTTPNotFound()
-            training["task"].cancel()
-            try:
-                await asyncio.wait_for(training["task"], 5)
-            except asyncio.TimeoutError:
-                pass
-            LOG.info("Training %s has been cancelled" % uuid_)
-            ret = self.build_train_response(uuid_, training)
-            self._training_history[uuid_] = ret
+            ret = None
+            if training:
+                training["task"].cancel()
+                try:
+                    await asyncio.wait_for(training["task"], 5)
+                except asyncio.TimeoutError:
+                    pass
+                LOG.info("Training %s has been cancelled" % uuid_)
+                ret = self.build_train_response(uuid_, training)
+                self._training_history.pop(uuid_, None)
+            else:
+                aux = self._training_history.pop(uuid_, None)
+                if not aux:
+                    raise web.HTTPNotFound()
+                ret = aux
             save_training_history(self._training_history, self._training_history_file)
             return web.json_response(ret)
 

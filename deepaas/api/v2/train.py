@@ -80,8 +80,9 @@ def load_training_history(file):
             if ret[uuid_]["status"] == "running":
                 ret[uuid_]["status"] = "error"
         except KeyError:
-            LOG.info('cannot read task %s or its status' +
-                     'from the training history file %s' % (uuid_, file))
+            msg = "cannot read task {} or its status " + \
+                  "from the training history file {}".format(uuid_, file)
+            LOG.info(msg)
     return ret
 
 

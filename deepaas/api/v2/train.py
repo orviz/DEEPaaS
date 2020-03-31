@@ -69,13 +69,13 @@ def load_training_history(file):
             data = fp.read()
             if data:
                 ret = json.loads(data.decode('utf-8'))
-    for uuid in ret.keys():
+    for uuid_ in ret.keys():
         try:
-            # unfinished tasks due to an improper system shutdown
-            if ret[uuid]["task"]["status"]["running"]:
-                ret[uuid]["task"]["status"]["running"] = "error"
+            # unfinished tasks due to an improper shutdown
+            if ret[uuid_]["status"] == "running":
+                ret[uuid_]["status"] = "error"
         except KeyError:
-            LOG.info('cannot read task %s or its status from the training history file %s' % (uuid, file))
+            LOG.info('cannot read task %s or its status from the training history file %s' % (uuid_, file))
     return ret
 
 def save_training_history(trainings, file):

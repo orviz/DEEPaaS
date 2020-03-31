@@ -16,10 +16,14 @@
 
 import asyncio
 from datetime import datetime
+import json
+import os
+import pathlib
 import uuid
 
 from aiohttp import web
 import aiohttp_apispec
+from json import JSONEncoder
 from oslo_log import log
 from webargs import aiohttpparser
 import webargs.core
@@ -30,6 +34,71 @@ from deepaas import model
 
 LOG = log.getLogger("deepaas.api.v2.train")
 
+# identify basedir for the package
+BASE_DIR = os.path.dirname(os.path.normpath(os.path.dirname(__file__)))
+
+IN_OUT_BASE_DIR = BASE_DIR
+if 'APP_INPUT_OUTPUT_BASE_DIR' in os.environ:
+    env_in_out_base_dir = os.environ['APP_INPUT_OUTPUT_BASE_DIR']
+    if os.path.isdir(env_in_out_base_dir):
+        IN_OUT_BASE_DIR = env_in_out_base_dir
+        LOG.info('IN_OUT_BASE_DIR=%s' % IN_OUT_BASE_DIR)
+    else:
+        msg = "[WARNING] \"APP_INPUT_OUTPUT_BASE_DIR=" + \
+        "{}\" is not a valid directory! ".format(env_in_out_base_dir) + \
+        "Using \"BASE_DIR={}\" instead.".format(BASE_DIR)
+        LOG.info(msg)
+
+DEEPAAS_CACHE_DIR = os.path.join(IN_OUT_BASE_DIR, 'cache', 'deepaas')
+if os.path.exists(DEEPAAS_CACHE_DIR):
+    if not os.path.isdir(DEEPAAS_CACHE_DIR):
+        LOG.info('ERROR: %s is not a directory!' % DEEPAAS_CACHE_DIR)
+else:
+    LOG.info('creating %s ...' % DEEPAAS_CACHE_DIR)
+    try:
+        pathlib.Path(DEEPAAS_CACHE_DIR).mkdir(parents=True, exist_ok=True)
+        LOG.info('creating %s ... %s' % (DEEPAAS_CACHE_DIR, 'OK' if os.path.isdir(DEEPAAS_CACHE_DIR) else 'ERROR'))
+    except Exception as e:
+        LOG.info('creating %s ... ERROR: %s' % (DEEPAAS_CACHE_DIR, e))
+DEEPAAS_TRAINING_HISTORY_FILE = os.path.join(DEEPAAS_CACHE_DIR, 'training_history.json')
+
+class DummyTask():
+    def __init__(self, obj):
+        if isinstance(obj, dict):
+            d = dict(obj)
+            self._cancelled = d["cancelled"]
+            self._done = d["done"]
+            self._exception = d["exception"]
+            self._result = d["result"]
+        elif isinstance(obj, asyncio.Task):
+            task = asyncio.Task(obj)
+            self._cancelled = task.cancelled()
+            self._done = task.done()
+            self._exception = task.exception() if self._done else None
+            self._result = task.result() if self._done and not self._exception else None
+    def cancelled(self):
+        return self._cancelled
+    def done(self):
+        return self._done
+    def exception(self):
+        return self._exception
+    def result(self):
+        return self._result
+    def to_json(self):
+        return {
+            "cancelled": self.cancelled(),
+            "done": self.done(),
+            "exception": "" if not self.exception() else str(self.exception()),
+            "result": self.result()
+        }
+
+def _deepaas_json_encoder(self, obj):
+    if isinstance(obj, asyncio.Task):
+        # encode the Task object
+        return DummyTask(asyncio.Task(obj))
+    return getattr(obj.__class__, "to_json", _deepaas_json_encoder.default)(obj)
+
+_deepaas_json_encoder.default = JSONEncoder().default
 
 def _get_handler(model_name, model_obj):  # noqa
     args = webargs.core.dict2schema(model_obj.get_train_args())
@@ -42,7 +111,8 @@ def _get_handler(model_name, model_obj):  # noqa
         def __init__(self, model_name, model_obj):
             self.model_name = model_name
             self.model_obj = model_obj
-            self._trainings = {}
+            self._training_history_file = DEEPAAS_TRAINING_HISTORY_FILE
+            self._trainings = self.load_training_history(self._training_history_file)
 
         @staticmethod
         def build_train_response(uuid, training):
@@ -73,6 +143,41 @@ def _get_handler(model_name, model_obj):  # noqa
                 ret["status"] = "running"
             return ret
 
+        @staticmethod
+        def load_training_history(file):
+            ret = {}
+            if os.path.isfile(file):
+                with open(file, 'rb') as fp:
+                    data = fp.read()
+                    if data:
+                        ret = json.loads(data.decode('utf-8'))
+            for uuid in ret.keys():
+                try:
+                    # unfinished tasks due to an improper system shutdown
+                    if not ret[uuid]["task"]["cancelled"] and not ret[uuid]["task"]["done"]:
+                        ret[uuid]["task"]["done"] = True
+                        ret[uuid]["task"]["exception"] = "killed"
+                    ret[uuid]["task"] = DummyTask(ret[uuid]["task"])
+                except KeyError:
+                    LOG.info('cannot read task %s or its status from the training history file %s' % (uuid, file))
+            return ret
+
+        @staticmethod
+        def save_training_history(trainings, file):
+            with open(file, 'wb') as fp:
+                try:
+                    tmp = JSONEncoder.default
+                    JSONEncoder.default = _deepaas_json_encoder
+                    data = json.dumps(trainings)
+                    data = bytes(data, 'utf-8')
+                    JSONEncoder.default = tmp
+                    fp.write(data)
+                except Exception as e:
+                    LOG.info(e)
+
+        def train_task_finished(self, result):
+            return result
+
         @aiohttp_apispec.docs(
             tags=["models"],
             summary="Retrain model with available data"
@@ -82,12 +187,14 @@ def _get_handler(model_name, model_obj):  # noqa
         async def post(self, request, args, wsk_args=None):
             uuid_ = uuid.uuid4().hex
             train_task = self.model_obj.train(**args)
+            train_task.add_done_callback(self.train_task_finished)
             self._trainings[uuid_] = {
                 "date": str(datetime.now()),
                 "task": train_task,
                 "args": args,
             }
             ret = self.build_train_response(uuid_, self._trainings[uuid_])
+            self.save_training_history(self._trainings, self._training_history_file)
             return web.json_response(ret)
 
         @aiohttp_apispec.docs(
@@ -106,6 +213,7 @@ def _get_handler(model_name, model_obj):  # noqa
                 pass
             LOG.info("Training %s has been cancelled" % uuid_)
             ret = self.build_train_response(uuid_, training)
+            self.save_training_history(self._trainings, self._training_history_file)
             return web.json_response(ret)
 
         @aiohttp_apispec.docs(
@@ -119,7 +227,7 @@ def _get_handler(model_name, model_obj):  # noqa
                 training = self._trainings.get(uuid_, None)
                 aux = self.build_train_response(uuid_, training)
                 ret.append(aux)
-
+            self.save_training_history(self._trainings, self._training_history_file)
             return web.json_response(ret)
 
         @aiohttp_apispec.docs(
@@ -132,6 +240,7 @@ def _get_handler(model_name, model_obj):  # noqa
             training = self._trainings.get(uuid_, None)
             ret = self.build_train_response(uuid_, training)
             if ret:
+                self.save_training_history(self._trainings, self._training_history_file)
                 return web.json_response(ret)
             raise web.HTTPNotFound()
 

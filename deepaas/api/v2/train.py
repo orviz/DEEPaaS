@@ -57,11 +57,13 @@ else:
     LOG.info('creating %s ...' % DEEPAAS_CACHE_DIR)
     try:
         pathlib.Path(DEEPAAS_CACHE_DIR).mkdir(parents=True, exist_ok=True)
-        LOG.info('creating %s ... %s' % (DEEPAAS_CACHE_DIR,
-            'OK' if os.path.isdir(DEEPAAS_CACHE_DIR) else 'ERROR'))
+        LOG.info('creating %s ... %s' %
+                 (DEEPAAS_CACHE_DIR,
+                  'OK' if os.path.isdir(DEEPAAS_CACHE_DIR) else 'ERROR'))
     except Exception as e:
         LOG.info('creating %s ... ERROR: %s' % (DEEPAAS_CACHE_DIR, e))
-DEEPAAS_TRAINING_HISTORY_FILE = os.path.join(DEEPAAS_CACHE_DIR,
+DEEPAAS_TRAINING_HISTORY_FILE = os.path.join(
+    DEEPAAS_CACHE_DIR,
     'training_history.json')
 
 
@@ -78,7 +80,8 @@ def load_training_history(file):
             if ret[uuid_]["status"] == "running":
                 ret[uuid_]["status"] = "error"
         except KeyError:
-            LOG.info('cannot read task %s or its status from the training history file %s' % (uuid_, file))
+            LOG.info('cannot read task %s or its status' +
+                     'from the training history file %s' % (uuid_, file))
     return ret
 
 
@@ -90,6 +93,7 @@ def save_training_history(trainings, file):
             fp.write(data)
         except Exception as e:
             LOG.info(e)
+
 
 def _get_handler(model_name, model_obj):  # noqa
     args = webargs.core.dict2schema(model_obj.get_train_args())
@@ -104,7 +108,8 @@ def _get_handler(model_name, model_obj):  # noqa
             self.model_obj = model_obj
             self._trainings = {}
             self._training_history_file = DEEPAAS_TRAINING_HISTORY_FILE
-            self._training_history = load_training_history(self._training_history_file)
+            self._training_history = load_training_history(
+                self._training_history_file)
 
         @staticmethod
         def build_train_response(uuid, training):
@@ -150,7 +155,8 @@ def _get_handler(model_name, model_obj):  # noqa
         async def post(self, request, args, wsk_args=None):
             uuid_ = uuid.uuid4().hex
             train_task = self.model_obj.train(**args)
-            train_task.add_done_callback(functools.partial(self._train_task_finished_callback, uuid_))
+            train_task.add_done_callback(
+                functools.partial(self._train_task_finished_callback, uuid_))
             self._trainings[uuid_] = {
                 "date": str(datetime.now()),
                 "task": train_task,
@@ -203,7 +209,8 @@ def _get_handler(model_name, model_obj):  # noqa
             for uuid_, aux in self._training_history.items():
                 if uuid_ not in self._trainings.keys():
                     ret.append(aux)
-            save_training_history(self._training_history, self._training_history_file)
+            save_training_history(self._training_history,
+                                  self._training_history_file)
             return web.json_response(ret)
 
         @aiohttp_apispec.docs(

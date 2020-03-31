@@ -45,8 +45,8 @@ if 'APP_INPUT_OUTPUT_BASE_DIR' in os.environ:
         LOG.info('IN_OUT_BASE_DIR=%s' % IN_OUT_BASE_DIR)
     else:
         msg = "[WARNING] \"APP_INPUT_OUTPUT_BASE_DIR=" + \
-        "{}\" is not a valid directory! ".format(env_in_out_base_dir) + \
-        "Using \"BASE_DIR={}\" instead.".format(BASE_DIR)
+            "{}\" is not a valid directory! ".format(env_in_out_base_dir) + \
+            "Using \"BASE_DIR={}\" instead.".format(BASE_DIR)
         LOG.info(msg)
 
 DEEPAAS_CACHE_DIR = os.path.join(IN_OUT_BASE_DIR, 'cache', 'deepaas')
@@ -57,10 +57,13 @@ else:
     LOG.info('creating %s ...' % DEEPAAS_CACHE_DIR)
     try:
         pathlib.Path(DEEPAAS_CACHE_DIR).mkdir(parents=True, exist_ok=True)
-        LOG.info('creating %s ... %s' % (DEEPAAS_CACHE_DIR, 'OK' if os.path.isdir(DEEPAAS_CACHE_DIR) else 'ERROR'))
+        LOG.info('creating %s ... %s' % (DEEPAAS_CACHE_DIR,
+            'OK' if os.path.isdir(DEEPAAS_CACHE_DIR) else 'ERROR'))
     except Exception as e:
         LOG.info('creating %s ... ERROR: %s' % (DEEPAAS_CACHE_DIR, e))
-DEEPAAS_TRAINING_HISTORY_FILE = os.path.join(DEEPAAS_CACHE_DIR, 'training_history.json')
+DEEPAAS_TRAINING_HISTORY_FILE = os.path.join(DEEPAAS_CACHE_DIR,
+    'training_history.json')
+
 
 def load_training_history(file):
     ret = {}
@@ -77,6 +80,7 @@ def load_training_history(file):
         except KeyError:
             LOG.info('cannot read task %s or its status from the training history file %s' % (uuid_, file))
     return ret
+
 
 def save_training_history(trainings, file):
     with open(file, 'wb') as fp:
@@ -134,7 +138,8 @@ def _get_handler(model_name, model_obj):  # noqa
         def _train_task_finished_callback(self, uuid_, result):
             ret = self.build_train_response(uuid_, self._trainings[uuid_])
             self._training_history[uuid_] = ret
-            save_training_history(self._training_history, self._training_history_file)
+            save_training_history(self._training_history,
+                                  self._training_history_file)
 
         @aiohttp_apispec.docs(
             tags=["models"],
@@ -153,7 +158,8 @@ def _get_handler(model_name, model_obj):  # noqa
             }
             ret = self.build_train_response(uuid_, self._trainings[uuid_])
             self._training_history[uuid_] = ret
-            save_training_history(self._training_history, self._training_history_file)
+            save_training_history(self._training_history,
+                                  self._training_history_file)
             return web.json_response(ret)
 
         @aiohttp_apispec.docs(
@@ -178,7 +184,8 @@ def _get_handler(model_name, model_obj):  # noqa
                 if not aux:
                     raise web.HTTPNotFound()
                 ret = aux
-            save_training_history(self._training_history, self._training_history_file)
+            save_training_history(self._training_history,
+                                  self._training_history_file)
             return web.json_response(ret)
 
         @aiohttp_apispec.docs(
@@ -210,7 +217,8 @@ def _get_handler(model_name, model_obj):  # noqa
             ret = self.build_train_response(uuid_, training)
             if ret:
                 self._training_history[uuid_] = ret
-                save_training_history(self._training_history, self._training_history_file)
+                save_training_history(self._training_history,
+                                      self._training_history_file)
                 return web.json_response(ret)
             raise web.HTTPNotFound()
 

@@ -188,6 +188,9 @@ def _get_handler(model_name, model_obj):  # noqa
                 aux = self.build_train_response(uuid_, training)
                 ret.append(aux)
                 self._training_history[uuid_] = aux
+            for uuid_, aux in self._training_history.items():
+                if uuid_ not in self._trainings.keys():
+                    ret.append(aux)
             save_training_history(self._training_history, self._training_history_file)
             return web.json_response(ret)
 

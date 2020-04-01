@@ -25,7 +25,6 @@ import uuid
 
 from aiohttp import web
 import aiohttp_apispec
-from oslo_config import cfg
 from oslo_log import log
 from webargs import aiohttpparser
 import webargs.core
@@ -34,7 +33,6 @@ from deepaas.api.v2 import responses
 from deepaas.api.v2 import utils
 from deepaas import model
 
-CONF = cfg.CONF
 LOG = log.getLogger("deepaas.api.v2.train")
 
 # identify basedir for the package
@@ -52,27 +50,25 @@ if 'APP_INPUT_OUTPUT_BASE_DIR' in os.environ:
             "Using \"BASE_DIR={}\" instead.".format(BASE_DIR)
         LOG.info(msg)
 
-DEEPAAS_CACHE_DIR = os.path.join(IN_OUT_BASE_DIR, 'cache', 'deepaas')
-if os.path.exists(DEEPAAS_CACHE_DIR):
-    if not os.path.isdir(DEEPAAS_CACHE_DIR):
-        LOG.info('ERROR: %s is not a directory!' % DEEPAAS_CACHE_DIR)
-else:
-    LOG.info('creating %s ...' % DEEPAAS_CACHE_DIR)
+
+def mkdir(dir):
     try:
-        pathlib.Path(DEEPAAS_CACHE_DIR).mkdir(parents=True, exist_ok=True)
-        LOG.info('creating %s ... %s' %
-                 (DEEPAAS_CACHE_DIR,
-                  'OK' if os.path.isdir(DEEPAAS_CACHE_DIR) else 'ERROR'))
+        LOG.info('checking %s ...' % dir)
+        pathlib.Path(dir).mkdir(parents=True, exist_ok=True)
+        LOG.info('checking %s ... OK' % dir)
+        return dir
     except Exception as e:
-        LOG.info('creating %s ... ERROR: %s' % (DEEPAAS_CACHE_DIR, e))
+        LOG.info('checking %s ... ERROR: %s' % (dir, e))
+
 
 APP_DEPLOYMENT_ID = ''
 if 'MARATHON_APP_ID' in os.environ:
     APP_DEPLOYMENT_ID = str(os.environ['MARATHON_APP_ID'])
     APP_DEPLOYMENT_ID = re.sub(r'[/\\]', '_', APP_DEPLOYMENT_ID).strip('_')
+DEEPAAS_TRAINING_HISTORY_DIR = mkdir(
+    os.path.join(IN_OUT_BASE_DIR, 'cache', 'deepaas', APP_DEPLOYMENT_ID))
 DEEPAAS_TRAINING_HISTORY_FILE = os.path.join(
-    DEEPAAS_CACHE_DIR,
-    APP_DEPLOYMENT_ID,
+    DEEPAAS_TRAINING_HISTORY_DIR,
     'training_history.json')
 
 

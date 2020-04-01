@@ -20,10 +20,12 @@ import functools
 import json
 import os
 import pathlib
+import re
 import uuid
 
 from aiohttp import web
 import aiohttp_apispec
+from oslo_config import cfg
 from oslo_log import log
 from webargs import aiohttpparser
 import webargs.core
@@ -32,6 +34,7 @@ from deepaas.api.v2 import responses
 from deepaas.api.v2 import utils
 from deepaas import model
 
+CONF = cfg.CONF
 LOG = log.getLogger("deepaas.api.v2.train")
 
 # identify basedir for the package
@@ -62,8 +65,14 @@ else:
                   'OK' if os.path.isdir(DEEPAAS_CACHE_DIR) else 'ERROR'))
     except Exception as e:
         LOG.info('creating %s ... ERROR: %s' % (DEEPAAS_CACHE_DIR, e))
+
+APP_DEPLOYMENT_ID = ''
+if 'MARATHON_APP_ID' in os.environ:
+    APP_DEPLOYMENT_ID = str(os.environ['MARATHON_APP_ID'])
+    APP_DEPLOYMENT_ID = re.sub(r'[/\\]', '_', APP_DEPLOYMENT_ID).strip('_')
 DEEPAAS_TRAINING_HISTORY_FILE = os.path.join(
     DEEPAAS_CACHE_DIR,
+    APP_DEPLOYMENT_ID,
     'training_history.json')
 
 

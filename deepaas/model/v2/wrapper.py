@@ -20,6 +20,7 @@ import contextlib
 import datetime
 import functools
 import io
+import joblib
 import multiprocessing
 import multiprocessing.pool
 import os
@@ -114,6 +115,16 @@ class ModelWrapper(object):
 
         if self._app is not None:
             self._setup_cleanup()
+
+        # Use joblib's Memory class to memoize calls to the predict method
+        # if arguments are the same
+        if CONF.cache_predict:
+            cache = joblib.Memory(
+                CONF.cache_dir,
+                verbose=1 if CONF.debug else 0,
+                bytes_limit=CONF.cache_max_size
+            ).cache
+            self.predict_wrap = cache(self.predict_wrap)
 
         schema = getattr(self.model_obj, "schema", None)
 

@@ -65,6 +65,24 @@ Pre-warm the modules (eg. load models, do preliminary checks, etc). You might
 want to disable this option if DEEPaaS is loading more than one module because
 you risk getting out of memory errors.
 """),
+    cfg.BoolOpt('cache-predict',
+                default=True,
+                help="""
+Whether to cache prediction results or not. By default we cache all prediction
+calls, persisting them to disk.
+"""),
+    cfg.IntOpt('cache-max-size',
+               default=100 * 1024 * 1024,
+               min=0,
+               help="""
+Prediction cache's maximum size, in bytes. By default, a 100MB cache is used.
+"""),
+    cfg.StrOpt('cache-dir',
+               default="/tmp/",
+               help="""
+If memoization is enabled (i.e. lazy evaluation of a prediction call), this
+option sets the directory where the prediction results will be cached.
+"""),
 ]
 
 CONF = cfg.CONF

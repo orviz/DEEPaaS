@@ -9,14 +9,14 @@ sqa-criteria:
       deepaas:
         tox:
           testenv: pep8
-    qc-coverage:
-      repos:
-        deepaas:
-          tox:
-            testenv: 
-              - cover
-              - cobertura
-  qc-sec:
+  qc-coverage:
+    repos:
+      deepaas:
+        tox:
+          testenv: 
+            - cover
+            - cobertura
+  qc-security:
     repos:
       deepaas:
         tox:

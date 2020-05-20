@@ -1,0 +1,23 @@
+config:
+  project_repos:
+    deepaas:
+      repo: https://github.com/indigo-dc/DEEPaaS
+
+sqa-criteria:
+  qc-style:
+    repos:
+      deepaas:
+        tox:
+          testenv: pep8
+    qc-coverage:
+      repos:
+        deepaas:
+          tox:
+            testenv: 
+              - cover
+              - cobertura
+  qc-sec:
+    repos:
+      deepaas:
+        tox:
+          testenv: bandit

@@ -35,6 +35,8 @@ RUN apt-get clean && \
 RUN pip3 install 'deepaas>=0.4.0' && \
     pip install 'deepaas>=0.4.0'
 
+RUN mkdir -p /home/DEEPaaS
+
 EXPOSE 5000
 
 # Do not run DEEPaaS within a shell (i.e. using "sh -c") here below, 
@@ -42,4 +44,4 @@ EXPOSE 5000
 # container will not stop on a "docker stop" command, as Docker sends
 # SIGTERM to the PID 1 (the shell will not propagate the signal to 
 # the child process.
-CMD ["deepaas-run", "--openwhisk-detect", "--listen-ip", "0.0.0.0", "--listen-port", "5000"]
+ENTRYPOINT ["deepaas-run", "--openwhisk-detect", "--listen-ip", "0.0.0.0", "--listen-port", "5000"]

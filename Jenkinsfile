@@ -1,162 +1,30 @@
-#!/usr/bin/groovy
+@Library(['github.com:WORSICA/jenkins-pipeline-library@docker-compose']) _
 
-@Library(['github.com/indigo-dc/jenkins-pipeline-library@release/1.4.0']) _
+def projectConfig
 
 pipeline {
-    agent {
-        label 'python3.6'
-    }
-    
-    environment {
-        dockerhub_repo = "indigodatacloud/deepaas"
-        dockerhub_image_id = ""
+    agent any
+
+    options {
+        buildDiscarder(logRotator(daysToKeepStr: '7', numToKeepStr: '1'))
     }
 
     stages {
-        stage('Code fetching') {
+        
+        stage('Dynamic Stages') {
             steps {
-                checkout scm
-            }
-        }
-
-        stage('Style analysis') {
-            steps {
-                ToxEnvRun('pep8')
-            }
-            post {
-                always {
-                    WarningsReport('Pep8')
-                }
-            }
-        }
-
-        stage('Unit testing coverage') {
-            steps {
-                ToxEnvRun('cover')
-                ToxEnvRun('cobertura')
-            }
-            post {
-                success {
-                    HTMLReport('cover', 'index.html', 'coverage.py report')
-                    CoberturaReport('**/coverage.xml')
-                }
-            }
-        }
-
-        stage('Metrics gathering') {
-            agent {
-                label 'sloc'
-            }
-            steps {
-                checkout scm
-                SLOCRun()
-            }
-            post {
-                success {
-                    SLOCPublish()
-                }
-            }
-        }
-
-        stage('Security scanner') {
-            steps {
-                ToxEnvRun('bandit-report')
                 script {
-                    if (currentBuild.result == 'FAILURE') {
-                        currentBuild.result = 'UNSTABLE'
-                    }
+                    projectConfig = PipelineConfig('.sqa/config.yml')
+                    BuildStages(projectConfig)
                 }
             }
             post {
-                always {
-                    HTMLReport("/tmp/bandit", 'index.html', 'Bandit report')
-                }
-            }
-        }
-
-        stage('Dependency check') {
-            agent {
-                label 'docker-build'
-            }
-            steps {
-                checkout scm
-                OWASPDependencyCheckRun("$WORKSPACE/DEEPaaS/deepaas", project="DEEPaaS")
-            }
-            post {
-                always {
-                    OWASPDependencyCheckPublish(report='**/dependency-check-report.xml')
-                    HTMLReport(
-                        "$WORKSPACE/DEEPaaS/deepaas",
-                        'dependency-check-report.html',
-                        'OWASP Dependency Report')
-                    deleteDir()
-                }
-            }
-        }
-
-        stage('DockerHub delivery') {
-            when {
-                anyOf {
-                    branch 'master'
-                    buildingTag()
-                }
-            }
-            agent {
-                label 'docker-build'
-            }
-            steps {
-                checkout scm
-                script {
-                    dockerhub_image_id = DockerBuild(dockerhub_repo,
-                                                     tag: env.BRANCH_NAME)
-                }
-            }
-            post {
-                success {
-                    DockerPush(dockerhub_image_id)
-                }
-                failure {
-                    DockerClean()
-                }
-                always {
+                cleanup {
                     cleanWs()
                 }
             }
         }
 
-        stage('PyPI delivery') {
-            when {
-                anyOf {
-                    buildingTag()
-                }
-            }
-            steps {
-                PyPIDeploy('deepaas', 'indigobot-pypi')
-            }
-        }
-
-        stage('Notifications') {
-            when {
-                buildingTag()
-            }
-	    steps {
-                JiraIssueNotification(
-                    'DEEP',
-                    'DPM',
-                    '10204',
-                    "[preview-testbed] New DEEP-as-a-Service version ${env.BRANCH_NAME} available",
-                    "Check new artifacts at:\n\t- Docker image: [${dockerhub_image_id}:${env.BRANCH_NAME}|https://hub.docker.com/r/${dockerhub_image_id}/tags/]\n",
-                    ['wp3', 'preview-testbed', "DEEPaaS-${env.BRANCH_NAME}"],
-                    'Task',
-                    'mariojmdavid',
-                    ['wgcastell',
-                     'vkozlov',
-                     'dlugo',
-                     'keiichiito',
-                     'laralloret',
-                     'ignacioheredia']
-                )
-            }
-        }
     }
+
 }

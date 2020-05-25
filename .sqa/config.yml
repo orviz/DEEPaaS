@@ -7,11 +7,13 @@ sqa-criteria:
   qc-style:
     repos:
       deepaas:
+        container: deepaas
         tox:
           testenv: pep8
   qc-coverage:
     repos:
       deepaas:
+        container: deepaas
         tox:
           testenv: 
             - cover
@@ -19,5 +21,6 @@ sqa-criteria:
   qc-security:
     repos:
       deepaas:
+        container: deepaas
         tox:
           testenv: bandit

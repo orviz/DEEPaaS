@@ -14,8 +14,8 @@ pipeline {
         stage('Dynamic Stages') {
             steps {
                 script {
-                    projectConfig = PipelineConfig('.sqa/config.yml')
-                    BuildStages(projectConfig)
+                    projectConfig = pipelineConfig()
+                    buildStages(projectConfig)
                 }
             }
             post {

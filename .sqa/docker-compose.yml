@@ -4,7 +4,7 @@ services:
   DEEPaaS:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./deepaas/Dockerfile
     image: "samuelbernardolip/deepaas:initial-sqa"
     container_name: "deepaas"
     hostname: "deepaas"

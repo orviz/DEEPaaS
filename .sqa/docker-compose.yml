@@ -3,7 +3,7 @@ version: "3.2"
 services:
   DEEPaaS:
     build:
-      context: deepaas
+      context: ../deepaas
       dockerfile: Dockerfile
     image: "samuelbernardolip/deepaas:initial-sqa"
     container_name: "deepaas"

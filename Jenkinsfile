@@ -1,4 +1,4 @@
-@Library(['github.com:WORSICA/jenkins-pipeline-library@docker-compose']) _
+@Library(['github.com/WORSICA/jenkins-pipeline-library@indigo-dependencies']) _
 
 def projectConfig
 
@@ -11,7 +11,7 @@ pipeline {
 
     stages {
         
-        stage('Dynamic Stages') {
+        stage('SQA Baseline Dynamic Stages') {
             steps {
                 script {
                     projectConfig = pipelineConfig()

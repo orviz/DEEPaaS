@@ -11,8 +11,8 @@ services:
     volumes:
      - type: bind
        source: DEEPaaS
-       target: /home/DEEPaaS
+       target: /home/deepaas
 
 volumes:
-  jenkins-pipeline-library: ./DEEPaaS
+  DEEPaaS: ./deepaas
 

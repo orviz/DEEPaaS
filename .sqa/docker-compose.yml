@@ -10,9 +10,5 @@ services:
     hostname: "deepaas"
     volumes:
      - type: bind
-       source: DEEPaaS
+       source: "./deepaas"
        target: /home/deepaas
-
-volumes:
-  DEEPaaS: ./deepaas
-

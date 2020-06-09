@@ -1,4 +1,4 @@
-version: "3"
+version: "3.2"
 
 services:
   DEEPaaS:
@@ -10,5 +10,5 @@ services:
     hostname: "deepaas"
     volumes:
      - type: bind
-       source: "./deepaas"
+       source: ./deepaas
        target: /home/deepaas

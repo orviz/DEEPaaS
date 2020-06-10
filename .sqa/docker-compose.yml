@@ -4,7 +4,6 @@ services:
   DEEPaaS:
     build:
       context: ../deepaas
-      dockerfile: Dockerfile
     image: "indigodatacloud/ci-images:python3.6"
     container_name: "deepaas"
     hostname: "deepaas"

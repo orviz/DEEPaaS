@@ -7,7 +7,7 @@ sqa-criteria:
   qc-style:
     repos:
       deepaas:
-        container: deepaas
+        container: deepaas-testing
         tox:
           testenv: pep8
   qc-coverage:

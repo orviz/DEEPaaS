@@ -1,10 +1,19 @@
 version: "3.2"
 
 services:
+  DEEPaaS-testing:
+    image: "indigodatacloud/ci-images:python3.6"
+    container_name: "deepaas-testing"
+    hostname: "deepaas-testing"
+    volumes:
+     - type: bind
+       source: ./deepaas-testing
+       target: /home/deepaas-testing
   DEEPaaS:
     build:
       context: ../deepaas
-    image: "indigodatacloud/ci-images:python3.6"
+      dockerfile: Dockerfile
+    image: "samuelbernardolip/deepaas:initial-sqa"
     container_name: "deepaas"
     hostname: "deepaas"
     volumes:

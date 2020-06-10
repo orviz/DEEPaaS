@@ -16,7 +16,10 @@ RUN apt-get install -y --no-install-recommends \
         python3-netifaces \
         python3-setuptools \
         python3-pip \
-        python3-wheel 
+        python3-wheel
+        
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python2 0
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 
 WORKDIR /srv
 

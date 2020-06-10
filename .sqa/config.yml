@@ -13,7 +13,7 @@ sqa-criteria:
   qc-coverage:
     repos:
       deepaas:
-        container: deepaas
+        container: deepaas-testing
         tox:
           testenv: 
             - cover
@@ -21,6 +21,6 @@ sqa-criteria:
   qc-security:
     repos:
       deepaas:
-        container: deepaas
+        container: deepaas-testing
         tox:
           testenv: bandit

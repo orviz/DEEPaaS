@@ -9,14 +9,14 @@ services:
      - type: bind
        source: ./deepaas-testing
        target: /home/deepaas-testing
-  DEEPaaS:
-    build:
-      context: ../deepaas
-      dockerfile: Dockerfile
-    image: "samuelbernardolip/deepaas:initial-sqa"
-    container_name: "deepaas"
-    hostname: "deepaas"
-    volumes:
-     - type: bind
-       source: ./deepaas
-       target: /home/deepaas
+  #DEEPaaS:
+  #  build:
+  #    context: ../deepaas
+  #    dockerfile: Dockerfile
+  #  image: "samuelbernardolip/deepaas:initial-sqa"
+  #  container_name: "deepaas"
+  #  hostname: "deepaas"
+  #  volumes:
+  #   - type: bind
+  #     source: ./deepaas
+  #     target: /home/deepaas

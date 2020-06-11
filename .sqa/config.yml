@@ -9,6 +9,7 @@ sqa-criteria:
       deepaas:
         container: DEEPaaS-testing
         tox:
+          tox_file: /deepaas-testing/tox.ini
           testenv:
             - pep8
   qc-coverage:
@@ -16,6 +17,7 @@ sqa-criteria:
       deepaas:
         container: DEEPaaS-testing
         tox:
+          tox_file: /deepaas-testing/tox.ini
           testenv: 
             - cover
             - cobertura
@@ -24,5 +26,6 @@ sqa-criteria:
       deepaas:
         container: DEEPaaS-testing
         tox:
+          tox_file: /deepaas-testing/tox.ini
           testenv:
             - bandit

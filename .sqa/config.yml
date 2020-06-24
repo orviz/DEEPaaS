@@ -3,8 +3,8 @@ config:
     deepaas:
       repo: https://github.com/indigo-dc/DEEPaaS.git
 
-sqa-criteria:
-  qc-style:
+sqa_criteria:
+  qc_style:
     repos:
       deepaas:
         container: DEEPaaS-testing
@@ -12,7 +12,7 @@ sqa-criteria:
           tox_file: /deepaas-testing/tox.ini
           testenv:
             - pep8
-  qc-coverage:
+  qc_coverage:
     repos:
       deepaas:
         container: DEEPaaS-testing
@@ -21,7 +21,7 @@ sqa-criteria:
           testenv: 
             - cover
             - cobertura
-  qc-security:
+  qc_security:
     repos:
       deepaas:
         container: DEEPaaS-testing
